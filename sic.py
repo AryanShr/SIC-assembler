@@ -3,6 +3,7 @@ from distutils.errors import DistutilsExecError
 from typing import Dict
 import json
 
+# setting location counters
 def Loc():
     start = 0
     file = open("input.txt","r") #read input file
@@ -35,9 +36,10 @@ def Loc():
     file.close()
     fileout.close()
 
+# To write object code in intermediate file
 def objectcode():
     file = open("intermediate.txt","r")
-    dict = {}
+    dict = {} #storing location counter of each label in dictionary
     for line in file:
         data = list(line.strip().split())
         if len(data)>1:
@@ -45,11 +47,11 @@ def objectcode():
                 if data[0].isalnum():
                     dict[data[1]] = data[0]
     file.close()
-    print(dict)
+    # print(dict)
     file = open("intermediate.txt","r")
     fileout = open("assembly.txt","w")
     op = open("Instruction_set.json","r")
-    data = json.loads(op.read())
+    data = json.loads(op.read()) #loads json file containing opcode
     for line in file:
         filedata = list(line.strip().split())
         # print(data)
