@@ -1,0 +1,11 @@
+    COPY    START  1000
+    -        LDA    FIVE
+    -        STA    ALPHA
+    -        LDCH   CHARZ
+            .
+            .
+            .
+    ALPHA   RESW    1
+    FIVE    WORD    5
+    CHARZ   BYTE    C'Z'
+    C1      RESB    1
