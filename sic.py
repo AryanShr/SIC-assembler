@@ -71,6 +71,7 @@ def objectcode():
             opc = ""
             try:
                 if filedata[1] != "END":
+                    # checking conditions for each mnemonic
                     if filedata[2] in filedata:
                         try:
                             if filedata[3] in dict:
@@ -118,13 +119,14 @@ def objectcode():
                 fileout.write(line)
     print("Assembly file generated....")
 
-
+# generation of object program
 def object():
-    start, end = Loc()
-    objectcode()
+    start, end = Loc() #taking start and end location counter value from Loc function
+    objectcode() #Running objectcode function to generate assembly file
     length = hex(int(hex(end), 16)-int(hex(start), 16)).lstrip("0x")
     file = open("assembly.txt", "r")
     fileout = open("objectprogram.txt", "w")
+    # using some temporary list, string and integer variable to store, or update data a step behind
     address = []
     tlength = 0
     bitmaskbit = ""
@@ -139,10 +141,11 @@ def object():
         data = list(line.strip().split())
         if "START" in data:
             fileout.write(
-                f"H {data[1]:{6}} {data[0].rjust(6,'0')} {length.rjust(6,'0')}\n")
+                f"H {data[1]:{6}} {data[0].rjust(6,'0')} {length.rjust(6,'0')}\n") #Adding header record to object program
             oline = f"{data[0].rjust(6,'0')}"
             prev = int(data[0], 16)
         elif "END" not in data:
+            #adding text records
             try:
                 if "." not in data:
                     curr = int(data[0], 16)
@@ -152,7 +155,7 @@ def object():
                         else:
                             if len(bitmaskbit) == 10 or int(data[0], 16)-temp > 3:
                                 bitmask.append(bitmaskbit)
-                                bitmaskbit = ""
+                                bitmaskbit = "" # reset the string to avoid crossing 10 bits
                             bitmaskbit += "1"
 
                         try:
@@ -197,7 +200,7 @@ def object():
             address[l] = f"T {address[l][:9]} {address[l][9:]}\n"
         fileout.write(address[l])
         z += 1
-    fileout.write(f"E {hex(start).lstrip('0x').rjust(6,'0')}")
+    fileout.write(f"E {hex(start).lstrip('0x').rjust(6,'0')}") # adding End Record in object program
     file.close()
     fileout.close()
     print("Object Program generated...")
