@@ -1,7 +1,9 @@
-from curses.ascii import isalnum
-from distutils.errors import DistutilsExecError
+from audioop import add
+from ctypes import sizeof
 from typing import Dict
 import json
+
+from pip import main
 
 # setting location counters
 
@@ -9,7 +11,8 @@ import json
 def Loc():
     start = 0
     sstart = 0
-    file = open("input.txt", "r")  # read input file
+    filen = input("Please Enter input file name :")
+    file = open(filen, "r")  # read input file
     fileout = open("intermediate.txt", "w")  # create empty intermediate file
     for line in file:  # iterate through each line input file
         data = list(line.strip().split())
@@ -39,6 +42,7 @@ def Loc():
             start = start+3
     file.close()
     fileout.close()
+    print("Intermediate file generated....")
     return sstart, start-2
 
 # To write object code in intermediate file
@@ -61,13 +65,13 @@ def objectcode():
     data = json.loads(op.read())  # loads json file containing opcode
     for line in file:
         filedata = list(line.strip().split())
-        # print(data)
         if "START" in filedata:
             fileout.write(line)
         else:
             opc = ""
             try:
                 if filedata[1] != "END":
+                    # checking conditions for each mnemonic
                     if filedata[2] in filedata:
                         try:
                             if filedata[3] in dict:
@@ -106,72 +110,100 @@ def objectcode():
                             print("Error")
                             print(line)
                             fileout.write(f"{line}")
-                            # opc = data[filedata[2]]["OPCODE"]+ "0000\n"
-                            # fileout.write(f"{line[:-1]:{35}} {opc:{7}}")
                 else:
                     fileout.write(line)
 
             except IndexError:
-                print("Error occured")
+                # print("Error occured")
                 # print(line)
                 fileout.write(line)
+    print("Assembly file generated....")
 
-    # print(dict)
-
-# def intermediate():
-#     file = open("output.txt","a+")
-#     file.write(Loc())
-#     file.close()
-        # print(data)
-# print(Loc())
-# intermediate()
-
-
+# generation of object program
 def object():
-    start, end = Loc()
-    objectcode()
+    start, end = Loc() #taking start and end location counter value from Loc function
+    objectcode() #Running objectcode function to generate assembly file
     length = hex(int(hex(end), 16)-int(hex(start), 16)).lstrip("0x")
     file = open("assembly.txt", "r")
     fileout = open("objectprogram.txt", "w")
+    # using some temporary list, string and integer variable to store, or update data a step behind
     address = []
     tlength = 0
+    bitmaskbit = ""
+    bitmask = []
     oline = ""
-    bitmask = ""
     global temp
     temp = start
+    global prev
+    prev = 0
+    prevline = []
     for line in file:
         data = list(line.strip().split())
-        # print(int(data[0],16))
         if "START" in data:
             fileout.write(
-                f"H {data[1]:{6}} {data[0].rjust(6,'0')} {length.rjust(6,'0')}\n")
+                f"H {data[1]:{6}} {data[0].rjust(6,'0')} {length.rjust(6,'0')}\n") #Adding header record to object program
+            oline = f"{data[0].rjust(6,'0')}"
+            prev = int(data[0], 16)
         elif "END" not in data:
+            #adding text records
             try:
                 if "." not in data:
+                    curr = int(data[0], 16)
                     if len(data) == 5:
+                        if 'RSUB' in data or 'WORD' in data or 'BYTE' in data:
+                            bitmaskbit += "0"
+                        else:
+                            if len(bitmaskbit) == 10 or int(data[0], 16)-temp > 3:
+                                bitmask.append(bitmaskbit)
+                                bitmaskbit = "" # reset the string to avoid crossing 10 bits
+                            bitmaskbit += "1"
+
                         try:
-                            # if "RSUB" or "BYTE" or "WORD" or "RESW" or "RESB" not in data:
-                            #     bitmask[data[4]] = "1"   
-                            # print(data[0],temp,int(data[0],16)-temp)
-                            if tlength == 10 or int(data[0],16)-temp>3:
+                            if tlength == 10 or int(data[0], 16)-temp > 3:
+                                if int(data[0], 16)-temp > 3:
+                                    oline = f"{oline[:6]} {hex(temp-prev+3).lstrip('0x').rjust(2,'0')} {oline[6:]}"
+                                else:
+                                    oline = f"{oline[:6]} {hex(curr-prev).lstrip('0x').rjust(2,'0')} {oline[6:]}"
                                 address.append(oline)
-                                # print(oline)
-                                oline = f""
+                                prev = int(data[0], 16)
+                                oline = f"{data[0].rjust(6,'0')}"
                                 tlength = 0
-                            # print(oline)
-                            temp = int(data[0],16)
+                            temp = int(data[0], 16)
                         except ValueError:
                             continue
-                        oline = oline + f" {data[4]}"
+                        oline = f"{oline} {data[4]}"
                         tlength += 1
+                        prevline = data
             except IndexError:
                 continue
-    # print(oline)
+        elif "END" in data:
+            if "'" in prevline[3]:
+                curr += 1
+            else:
+                curr += 3
+    bitmask.append(bitmaskbit)
+    oline = f"{oline[:6]} {hex(curr-prev).lstrip('0x').rjust(2,'0')} {oline[6:]}"
     address.append(oline)
-    # print(bitmask,sep="\n")
-    # print(bitmask.count("1"))
-    # print(*address,sep="\n")
-    # print(oline, tlength)
+    bitmaskhex = []
+    for i in range(len(bitmask)):
+        res = [hex(int(str(bitmask[i][y - 4:y]).ljust(4, "0"), 2)).lstrip("0x")
+               for y in range(4, len(bitmask[i]) + 4, 4)]
+        strt = ""
+        for j in range(len(res)):
+            strt += res[j]
+        bitmaskhex.append(strt.ljust(3, "0"))
+    z = 0
+    for l in range(len(address)):
+        try:
+            address[l] = f"T {address[l][:9]} {bitmaskhex[z]}{address[l][9:]}\n"
+        except IndexError:
+            address[l] = f"T {address[l][:9]} {address[l][9:]}\n"
+        fileout.write(address[l])
+        z += 1
+    fileout.write(f"E {hex(start).lstrip('0x').rjust(6,'0')}") # adding End Record in object program
+    file.close()
+    fileout.close()
+    print("Object Program generated...")
 
-
-object()
+if __name__ == '__main__':
+    object()
