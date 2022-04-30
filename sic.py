@@ -20,25 +20,25 @@ def Loc():
         if "START" in data:
             start = int(data[2], 16)
             sstart = start
-            fileout.write(str(hex(start).lstrip("0x")) + line)
+            fileout.write(str(hex(start).lstrip("0x")).upper() + line)
         elif "RESB" in data:
             if data[2].isnumeric():
                 temp = int(hex(int(data[2])).lstrip("0x"))
-                fileout.write(str(hex(start).lstrip("0x")) + line)
+                fileout.write(str(hex(start).lstrip("0x")).upper() + line)
                 start = start + int(data[2])
         elif "." in data:
             fileout.write("    " + line)
         elif "BYTE" in data:
             if "X'F1'" in data:
-                fileout.write(str(hex(start).lstrip("0x")) + line)
+                fileout.write(str(hex(start).lstrip("0x")).upper() + line)
                 start = start + 1
             else:
-                fileout.write(str(hex(start).lstrip("0x")) + line)
+                fileout.write(str(hex(start).lstrip("0x")).upper() + line)
                 start = start + 3
         elif "END" in data:
             fileout.write("    " + line)
         else:
-            fileout.write(str(hex(start).lstrip("0x")) + line)
+            fileout.write(str(hex(start).lstrip("0x")).upper() + line)
             start = start+3
     file.close()
     fileout.close()
@@ -77,39 +77,39 @@ def objectcode():
                             if filedata[3] in dict:
                                 opc = data[filedata[2]]["OPCODE"] + \
                                     dict[filedata[3]]
-                                fileout.write(f"{line[:-1]:{35}} {opc:{7}}\n")
+                                fileout.write(f"{line[:-1]:{35}} {opc:{7}}\n".upper())
                             elif ",X" in filedata[3]:
                                 temp = hex(
                                     int(dict[filedata[3][:-2]][0]) + 8).lstrip("0x")
                                 temp = hex(
                                     int(dict[filedata[3][:-2]][0]) + 8).lstrip("0x")+dict[filedata[3][:-2]][1:]
                                 opc = data[filedata[2]]["OPCODE"]+temp
-                                fileout.write(f"{line[:-1]:{35}} {opc:{7}}\n")
+                                fileout.write(f"{line[:-1]:{35}} {opc:{7}}\n".upper())
                             elif filedata[2] == "BYTE" or filedata[2] == "WORD":
                                 if filedata[3][2:-1] == "EOF":
                                     opc = "454f46"
                                     fileout.write(
-                                        f"{line[:-1]:{35}} {opc:{7}}\n")
+                                        f"{line[:-1]:{35}} {opc:{7}}\n".upper())
                                 elif filedata[3].isnumeric():
                                     opc = hex(int(filedata[3])).lstrip(
                                         "0x").rjust(6, "0")
                                     fileout.write(
-                                        f"{line[:-1]:{35}} {opc:{7}}\n")
+                                        f"{line[:-1]:{35}} {opc:{7}}\n".upper())
                                 elif "X" or "C" in filedata[3]:
                                     opc = filedata[3][2:-1]
                                     fileout.write(
-                                        f"{line[:-1]:{35}} {opc:{7}}\n")
+                                        f"{line[:-1]:{35}} {opc:{7}}\n".upper())
                                 else:
                                     fileout.write(f"{line}")
                             elif "RSUB" in filedata:
                                 opc = data[filedata[2]]["OPCODE"] + "0000\n"
-                                fileout.write(f"{line[:-1]:{35}} {opc:{7}}")
+                                fileout.write(f"{line[:-1]:{35}} {opc:{7}}".upper())
                             else:
                                 fileout.write(line)
                         except IndexError:
                             print("Error")
                             print(line)
-                            fileout.write(f"{line}")
+                            fileout.write(f"{line}".upper())
                 else:
                     fileout.write(line)
 
@@ -141,7 +141,7 @@ def object():
         data = list(line.strip().split())
         if "START" in data:
             fileout.write(
-                f"H {data[1]:{6}} {data[0].rjust(6,'0')} {length.rjust(6,'0')}\n") #Adding header record to object program
+                f"H {data[1]:{6}} {data[0].rjust(6,'0')} {length.rjust(6,'0')}\n".upper()) #Adding header record to object program
             oline = f"{data[0].rjust(6,'0')}"
             prev = int(data[0], 16)
         elif "END" not in data:
@@ -198,7 +198,7 @@ def object():
             address[l] = f"T {address[l][:9]} {bitmaskhex[z]}{address[l][9:]}\n"
         except IndexError:
             address[l] = f"T {address[l][:9]} {address[l][9:]}\n"
-        fileout.write(address[l])
+        fileout.write(address[l].upper())
         z += 1
     fileout.write(f"E {hex(start).lstrip('0x').rjust(6,'0')}") # adding End Record in object program
     file.close()

@@ -5,8 +5,8 @@
             .
             .
             .
-    ALPHA   RESW    1
     FIVE    WORD    5
     CHARZ   BYTE    C'Z'
+    ALPHA   RESW    1
     C1      RESB    1
     -       END     COPY
