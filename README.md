@@ -8,5 +8,5 @@ Three txt files will be created:
 
 Note: Input file format must be same as that of input1.txt or input2.txt<br/><br/>
 Contributors: <br/>
-      Aryan Shrivastav
+      Aryan Shrivastav<br/>
       Aditya
